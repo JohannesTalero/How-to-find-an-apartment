@@ -1,5 +1,6 @@
 #Basic Libraries
 import pandas as pd
+import numpy as np
 import time
 from selenium import webdriver
 from selenium.webdriver import ActionChains
@@ -23,7 +24,11 @@ def get_dpt_links(driver):
 
     """
     try:
-        Links_Apt=driver.find_elements_by_xpath('//a[@class="data-details-id"]')
+        object_link=driver.find_elements_by_xpath('//a[@class="data-details-id"]')
+        Links_Apt=[]
+        for obj in object_link:            
+            url_new=obj.get_attribute("href")
+            Links_Apt=Links_Apt+[url_new]
     except:
         print('An unexpected error has appeared in the apartment list search')
         Links_Apt=[]
@@ -73,9 +78,9 @@ smart_delay(driver,10,'//div[@class="button"]')
 rooms_3=driver.find_elements_by_xpath('//div[@class="button"]')[2]
 ActionChains(driver).click(rooms_3).perform()
 #Select options with 2 rooms
-time.sleep(10)
-rooms_2=driver.find_elements_by_xpath('//div[@class="button"]')[1]
-ActionChains(driver).click(rooms_2).perform()
+#time.sleep(10)
+#rooms_2=driver.find_elements_by_xpath('//div[@class="button"]')[1]
+#ActionChains(driver).click(rooms_2).perform()
 
 #Apartment url search
 more=True
@@ -83,34 +88,29 @@ i=0
 Full_links=[]
 while more:
     i=i+1
-    smart_delay(driver,10,'//a[@class="data-details-id"]')
-    Links_Temp=get_dpt_links(driver)
-    Full_links=Full_links+Links_Temp
-    #Click for next page 
     try:
-        next_page=driver.find_element_by_xpath('//a[@class="next list"]')
-        ActionChains(driver).click(next_page).perform()
+        smart_delay(driver,30,'//a[@class="next list"]')
+        smart_delay(driver,10,'//a[@class="data-details-id"]')
+        Links_Temp=get_dpt_links(driver)
+        Full_links=Full_links+Links_Temp
+        #Click for next page 
+        try:
+            next_page=driver.find_element_by_xpath('//a[@class="next list"]')
+            ActionChains(driver).click(next_page).perform()
+        except:
+            print(f'End in iteration {i}')
+            more=False
     except:
         print(f'End in iteration {i}')
         more=False
-
-
-
-
-
-
-
-
-
-
-Lista_Urls=[]
-for link in Links_Apt:
-    try:
-        url_new=link.get_attribute("href")
-        Lista_Urls.append(url_new)
-    except: 
-        pass        
 driver.quit()
+Full_links_DF=pd.DataFrame(Full_links)
+Full_links_DF.to_csv("H:/2020-02/How to find a new home with Scraping and game theory/Codigo/Full_links.csv")
+  
+#----------------------------------------------------------------------------
+#--------------------------------Read each apartment -----------------------------
+#----------------------------------------------------------------------------
+
 data=pd.DataFrame()
 i=0
 for url_tem in Lista_Urls:
