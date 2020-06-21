@@ -1,25 +1,106 @@
+#Basic Libraries
 import pandas as pd
-import numpy as np
-import requests 
-import lxml
 import time
-from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import ActionChains
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+#----------------------------------------------------------------------------
+#-------------------------------- Function ----------------------------------
+#----------------------------------------------------------------------------
+def get_dpt_links(driver):
+    """Returns the list of apartments found on the page
+    Parameters
+    ----------
+    driver : webdriver
+        It is the driver in which the apartments are searched.
+    Returns
+    -------
+    array of apartment if an error occurs it returns an empty array.
 
-# Iniciar driver
+    """
+    try:
+        Links_Apt=driver.find_elements_by_xpath('//a[@class="data-details-id"]')
+    except:
+        print('An unexpected error has appeared in the apartment list search')
+        Links_Apt=[]
+    return(Links_Apt)
+
+def smart_delay(driver,delay,xpathx_str):
+    """ Pauses intelligently until xpathx_str appears, waiting for a maximum of delay,
+        if xpathx_str does not occur, an error returns.    
+    Parameters
+    ----------
+    driver : webdriver
+        It is the driver in which the departments are searched..
+    delay : int
+        The maximum waiting time in seconds.
+    xpathx_str : string
+        the waiting xpath object.
+
+    Returns
+    -------
+    None.
+
+    """
+    # Introducir una demora
+    delay = 10
+    try:
+        departments_page = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH,xpathx_str )))
+        print(' finished loading')
+    except TimeoutException as e:
+        return(e)
+    
+#----------------------------------------------------------------------------
+#--------------------------------Metro cuadrado -----------------------------
+#----------------------------------------------------------------------------
+
+#Driver initilizer
 options=webdriver.ChromeOptions()
 options.add_argument('--incognito')
 options.add_argument("--start-maximized")
+#options.add_argument('--proxy-server=%s' % proxy[0])
 
-#----------------------------------------------------------------------------
-#--------------------------------Metro cuadrado ----------------------------------
-#----------------------------------------------------------------------------
 driver= webdriver.Chrome(executable_path=r'H:/2020-02/How to find a new home with Scraping and game theory/chromedriver.exe',options=options)
 url='https://www.metrocuadrado.com/apartamentos/arriendo/bogota/'
 driver.get(url)
+smart_delay(driver,10,'//div[@class="button"]')
+
+#Select options with 3 rooms
+rooms_3=driver.find_elements_by_xpath('//div[@class="button"]')[2]
+ActionChains(driver).click(rooms_3).perform()
+#Select options with 2 rooms
 time.sleep(10)
-Links_Apt=driver.find_elements_by_xpath('//a[@class="data-details-id"]')
+rooms_2=driver.find_elements_by_xpath('//div[@class="button"]')[1]
+ActionChains(driver).click(rooms_2).perform()
+
+#Apartment url search
+more=True
+i=0
+Full_links=[]
+while more:
+    i=i+1
+    smart_delay(driver,10,'//a[@class="data-details-id"]')
+    Links_Temp=get_dpt_links(driver)
+    Full_links=Full_links+Links_Temp
+    #Click for next page 
+    try:
+        next_page=driver.find_element_by_xpath('//a[@class="next list"]')
+        ActionChains(driver).click(next_page).perform()
+    except:
+        print(f'End in iteration {i}')
+        more=False
+
+
+
+
+
+
+
+
 
 
 Lista_Urls=[]
@@ -29,73 +110,74 @@ for link in Links_Apt:
         Lista_Urls.append(url_new)
     except: 
         pass        
-driver.close
-
+driver.quit()
 data=pd.DataFrame()
 i=0
 for url_tem in Lista_Urls:
-    
-    driver= webdriver.Chrome(executable_path=r'H:/2020-02/How to find a new home with Scraping and game theory/chromedriver.exe',options=options)
-    print(f'Leyendo url {i} de {len(Lista_Urls)}')
-    driver.get(url_tem)
-    time.sleep(8)
-    #Elements
-    Chara_url_temp=dict()
     try:
-        #General Values
-        L_GV=driver.find_element_by_xpath('.//div[@class="m_property_info_table"]').text.split('\n')
-        L_GV=[x for x in L_GV if x not in ['Estoy interesado']]
-        for i in range(len(L_GV)):
-            if i%2==0:
-                Chara_url_temp.update({L_GV[i]:[L_GV[i+1]]})
-            else:
-                pass         
-    except:
-        print('Error en General Values ')
-    
-    #Short desciption
-    try:
-        Chara_url_temp.update({'Description':[driver.find_element_by_xpath('.//p[@id="pDescription"]').text]})
-    except:
-        print('Error en description')
-    #Property info details
-    try:
-        PID=driver.find_element_by_xpath('.//div[@class="m_property_info_details"]').text.split('\n')
+        driver= webdriver.Chrome(executable_path=r'H:/2020-02/How to find a new home with Scraping and game theory/chromedriver.exe',options=options)
+        print(f'Leyendo url {i} de {len(Lista_Urls)}')
+        driver.get(url_tem)
+        time.sleep(8)
+        #Elements
+        Chara_url_temp=dict()
+        try:
+            #General Values
+            L_GV=driver.find_element_by_xpath('.//div[@class="m_property_info_table"]').text.split('\n')
+            L_GV=[x for x in L_GV if x not in ['Estoy interesado']]
+            for i in range(len(L_GV)):
+                if i%2==0:
+                    Chara_url_temp.update({L_GV[i]:[L_GV[i+1]]})
+                else:
+                    pass         
+        except:
+            print('Error en General Values ')
         
-        PID=[x for x in PID if x not in ['Datos principales del inmueble']]
-        for i in range(len(PID)):
-            if i%2==0:
-                Chara_url_temp.update({PID[i]:[PID[i+1]]})
-            else:
-                pass   
-    except:
-        print('Error en Property info details ')
+        #Short desciption
+        try:
+            Chara_url_temp.update({'Description':[driver.find_element_by_xpath('.//p[@id="pDescription"]').text]})
+        except:
+            print('Error en description')
+        #Property info details
+        try:
+            PID=driver.find_element_by_xpath('.//div[@class="m_property_info_details"]').text.split('\n')
+            
+            PID=[x for x in PID if x not in ['Datos principales del inmueble']]
+            for i in range(len(PID)):
+                if i%2==0:
+                    Chara_url_temp.update({PID[i]:[PID[i+1]]})
+                else:
+                    pass   
+        except:
+            print('Error en Property info details ')
+        
+        #More info details
+        try:
+            MID=driver.find_element_by_xpath('.//div[@class="m_property_info_details more_info"]').text.split('\n')
+            MID=[x for x in MID if x not in ['Más información de este apartamento','Ver más información']]
+            for i in range(len(MID)):
+                if i%2==0:
+                    Chara_url_temp.update({MID[i]:[MID[i+1]]})
+                else:
+                    pass   
+        except:
+            print('Error en More Info details')
+        #Img
+        try:
+            Chara_url_temp.update({'Imagen':[driver.find_element_by_xpath('.//img[@class="serviceImg horizontal-img"]').get_attribute("src")]})
+        except:
+            print('Error en More Imagen')
     
-    #More info details
-    try:
-        MID=driver.find_element_by_xpath('.//div[@class="m_property_info_details more_info"]').text.split('\n')
-        MID=[x for x in MID if x not in ['Más información de este apartamento','Ver más información']]
-        for i in range(len(MID)):
-            if i%2==0:
-                Chara_url_temp.update({MID[i]:[MID[i+1]]})
-            else:
-                pass   
-    except:
-        print('Error en More Info details')
-    #Img
-    try:
-        Chara_url_temp.update({'Imagen':[driver.find_element_by_xpath('.//img[@class="serviceImg horizontal-img"]').get_attribute("src")]})
-    except:
-        print('Error en More Imagen')
-
-
-    Chara_url_temp.update({'URL':[url_tem]})
-
-    data_tem=pd.DataFrame.from_dict(Chara_url_temp)
-    data=data.append(data_tem)
-    print(data_tem)
     
+        Chara_url_temp.update({'URL':[url_tem]})
+    
+        data_tem=pd.DataFrame.from_dict(Chara_url_temp)
+        data=data.append(data_tem)
+        print(data_tem)
+    except:
+          print(f'Error no previsto en  url {i} de {len(Lista_Urls)}')
     print(f'Termino url {i} de {len(Lista_Urls)}')
     i=i+1
-    driver.close
+    driver.quit()
+
 
