@@ -190,11 +190,11 @@ def get_information(driver,Chara_url_temp):
     -------
     None.
     """
-    general_values(drive, Chara_url_temp)
-    short_description(drive, Chara_url_temp)
-    property_info_details(drive, Chara_url_temp)
-    more_info_details(drive, Chara_url_temp) 
-    imagen_apt(drive, Chara_url_temp)
+    general_values(driver, Chara_url_temp)
+    short_description(driver, Chara_url_temp)
+    property_info_details(driver, Chara_url_temp)
+    more_info_details(driver, Chara_url_temp) 
+    imagen_apt(driver, Chara_url_temp)
 
 #----------------------------------------------------------------------------
 #--------------------------------Metro cuadrado -----------------------------
@@ -223,7 +223,7 @@ Price_l=driver.find_element_by_xpath('//input[@id="list-price_from"]')
 Price_u=driver.find_element_by_xpath('//input[@id="list-price_to"]')
 Price_l.send_keys("1000000")
 Price_u.send_keys("2000000")
-
+smart_delay(driver,30,'//a[@class="m_btn inline inverted price_range"]')
 button_price=driver.find_element_by_xpath('//a[@class="m_btn inline inverted price_range"]')
 ActionChains(driver).click(button_price).perform()
 
@@ -238,6 +238,7 @@ while more:
         smart_delay(driver,10,'//a[@class="data-details-id"]')
         Links_Temp=get_dpt_links(driver)
         Full_links=Full_links+Links_Temp
+        Full_links=list(dict.fromkeys(Full_links))
         #Click for next page 
         try:
             next_page=driver.find_element_by_xpath('//a[@class="next list"]')
@@ -259,12 +260,9 @@ Full_links_DF.to_csv("H:/2020-02/How to find a new home with Scraping and game t
 #--------------------------------Read each apartment -----------------------------
 #----------------------------------------------------------------------------
 #Driver initilizer
-
-
 options=webdriver.ChromeOptions()
 options.add_argument('--incognito')
 options.add_argument("--start-maximized")
-
 data=pd.DataFrame()
 i=0
 Full_links_DF=pd.read_csv("H:/2020-02/How to find a new home with Scraping and game theory/Codigo/Full_links.csv")['0']
@@ -284,10 +282,8 @@ for url_tem in Full_links_DF:
         data=data.append(data_tem)
         print(data_tem)
     except:
-          print(f'Error no previsto en  url {i} de {len(Lista_Urls)}')
-    print(f'Termino url {i} de {len(Lista_Urls)}')
+          print(f'Error no previsto en  url {i} de {len(Full_links_DF)}')
+    print(f'Termino url {i} de {len(Full_links_DF)}')
     i=i+1
     driver.quit()
 data.to_csv("H:/2020-02/How to find a new home with Scraping and game theory/Codigo/Data_Apartments.csv")
-
-
