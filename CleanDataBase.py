@@ -1,4 +1,6 @@
 #Basic Libraries
+import unidecode
+import Levenshtein
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -64,6 +66,8 @@ def clean_variable_to_float(data,variable,strings,point_importance=False):
         data[variable]=pd.to_numeric(data[variable],errors='coerce')
     return(data[variable])
         
+def del_string(self,string):
+    return(str(self).replace(string,''))
 #-----------------------------------------------------------------------------
 path='H:/2020-02/How to find a new home with Scraping and game theory/Codigo/'
 Data_Apartments=pd.read_csv(path+'Data_Apartments.csv')
@@ -165,23 +169,75 @@ Data_Apartments['Terraza/Balcón']=np.where(Data_Apartments['Terraza/Balcón'].i
 #-----------------------------------------------------------------------------
 #------------------------------ Data enrichment-------------------------------
 #-----------------------------------------------------------------------------
-Barrios=pd.read_csv(path+'Barrios-Bogota.csv',sep=';')
+Barrios=pd.read_csv(path+'Data_Localidades.csv',sep=',')
+del Barrios['Unnamed: 0']
+Barrios['Barrio']=Barrios['Barrio'].str.strip()
+Barrios['Barrio']=Barrios['Barrio'].str.upper()
+Barrios['Barrio']=Barrios['Barrio'].apply(unidecode.unidecode)
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='LOS ')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='EL ')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='LAS ')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' DEL ')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' DE ')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='LA ')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' I')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' II')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' III')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' IV')
+Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' V')
+Barrios['Barrio']=Barrios['Barrio'].apply(delet_non_alphanumeric)
+Barrios.drop_duplicates()
 
-
-
-
-#Description tema 2
-
-#Nombre Comun del barrio Limpiar casos
-#Nombre barrio catastral del barrio Limpiar casos
-
-
-
-
-Barrios=pd.read_csv(path+'Barrios-Bogota.csv',sep=';')
-Barrios=Barrios.drop_duplicates()
 Data_Apartments['Barrio']=Data_Apartments['Nombre del barrio catastral']
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].str.upper()
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(unidecode.unidecode)
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='LOS ')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='EL ')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='LAS ')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' DEL ')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' DE ')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='LA ')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' I')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' II')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' III')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' IV')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' V')
+Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(delet_non_alphanumeric)
+
 Data_Apartments_En=pd.merge(Data_Apartments,Barrios,how='left',on='Barrio')
+
+#------------------------------------------------------------------------------
+for a in Data_Apartments_En[Data_Apartments_En.Localidad.isnull()]['Barrio'].unique():
+    Barrios_lista=Barrios.Barrio.unique()
+    min_i=1000
+    barrio_prox=''
+    for i in Barrios_lista:
+        if (Levenshtein.distance(a, i))<min_i:
+            min_i=Levenshtein.distance(a, i)
+            barrio_prox=i
+    print(barrio_prox)
+    print(a)
+    
+    if True:#(min_i/len(a))<=1000:
+        Localidad_temp=Barrios[Barrios['Barrio']==barrio_prox].reset_index()['Localidad'][0]
+        index_temp=Data_Apartments_En[Data_Apartments_En['Barrio']==a].index[0]
+        Data_Apartments_En.loc[index_temp,'Localidad']=Localidad_temp
+    
+
+Data_Apartments_En.Localidad.isnull().sum()/len(Data_Apartments_En)
+
+
+Data_Apartments_En[Data_Apartments_En.Localidad.isnull()]['Barrio'].unique()
+
+
+
+
+
+# unaccented_string contains 'Malaga'and is of type 'str'
+
+
+
+
 
 pio.renderers.default = 'png'
 Data_Analityc_1=Data_Apartments_En[["Valor de arriendo","Área construida",'Estrato','Localidad','Habitaciones','Nombre del barrio catastral']]
