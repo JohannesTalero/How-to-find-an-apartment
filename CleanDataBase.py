@@ -226,67 +226,21 @@ for a in Data_Apartments_En[Data_Apartments_En.Localidad.isnull()]['Barrio'].uni
 
 Data_Apartments_En.Localidad.isnull().sum()/len(Data_Apartments_En)
 
-
 Data_Apartments_En[Data_Apartments_En.Localidad.isnull()]['Barrio'].unique()
 
+Data_Apartments_En.to_csv('H:/2020-02/How to find a new home with Scraping and game theory/Data_')
 
 
-
-
-# unaccented_string contains 'Malaga'and is of type 'str'
-
-
-
-
-
+#---------------------- Graph easy ---------------------------------------------
 pio.renderers.default = 'png'
 Data_Analityc_1=Data_Apartments_En[["Valor de arriendo","Área construida",'Estrato','Localidad','Habitaciones','Nombre del barrio catastral']]
 Data_Analityc_1=Data_Analityc_1.groupby(["Valor de arriendo","Área construida",'Estrato','Localidad','Nombre del barrio catastral']).count().reset_index()
-Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Área construida"]>=100]
+Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Área construida"]>=60]
 Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Estrato"]>=3]
 Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Estrato"]<=5]
-Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Localidad"]=='CHAPINERO']
+Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Localidad"]=='Usaquén']
 
 
 fig = px.scatter(Data_Analityc_1, y="Valor de arriendo", x="Área construida",color='Nombre del barrio catastral',
                  size="Habitaciones",  log_x=True,title='Área vs Valor de Arriendo')
 fig.show()
-
-
-Data_Apartments_TEMP=Data_Apartments_En[Data_Apartments_En['Localidad'].isin(['CHAPINERO'])]
-Data_Apartments_TEMP=Data_Apartments_TEMP[Data_Apartments_TEMP["Área construida"]>=100]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
