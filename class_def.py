@@ -156,11 +156,14 @@ class apartment:
        self.contextual_properties_N = contextual_properties_N
        self.parking_properties_N = parking_properties_N
        self.additional_features_N = additional_features_N
-       self.score=0
+       self.score=1500
+       self.games=0
+       self.win=0
+       self.rival_score_a=0
     
     def summary(self,save=False):
         properties=[self.Lease_value, self.Administration_value, self.Description, self.Image, self.URL, self.Negotiate_Price, self.physical_properties_N,
-                    self.contextual_properties_N, self.parking_properties_N, self.additional_features_N, self.score]
+                    self.contextual_properties_N, self.parking_properties_N, self.additional_features_N, self.score,self.games]
         print(f"""
               ---------------------------
               Lease_value: {self.Lease_value}
@@ -170,6 +173,7 @@ class apartment:
               URL: {self.URL}
               Negotiate_Price: {self.Negotiate_Price}
               score: {self.score}
+              games: {self.games}
               ---------------------------
               """)
         self.physical_properties_N.summary()

@@ -228,7 +228,7 @@ Data_Apartments_En.Localidad.isnull().sum()/len(Data_Apartments_En)
 
 Data_Apartments_En[Data_Apartments_En.Localidad.isnull()]['Barrio'].unique()
 
-Data_Apartments_En.to_csv('H:/2020-02/How to find a new home with Scraping and game theory/Data_')
+Data_Apartments_En.to_csv('H:/2020-02/How to find a new home with Scraping and game theory/Data_Final.csv')
 
 
 #---------------------- Graph easy ---------------------------------------------
@@ -244,3 +244,20 @@ Data_Analityc_1=Data_Analityc_1[Data_Analityc_1["Localidad"]=='Usaquén']
 fig = px.scatter(Data_Analityc_1, y="Valor de arriendo", x="Área construida",color='Nombre del barrio catastral',
                  size="Habitaciones",  log_x=True,title='Área vs Valor de Arriendo')
 fig.show()
+
+#-----------------------------------------------------------------------------------
+
+
+Datos=pd.read_csv('H:/2020-02/How to find a new home with Scraping and game theory/Data_Final.csv') 
+
+
+
+
+
+
+
+
+
+
+
+

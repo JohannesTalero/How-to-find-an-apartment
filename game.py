@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import re
 import plotly.graph_objects as go
+import random
 
 # some_file.py
 import sys
@@ -68,15 +69,80 @@ def column_to_apartment(Datos,i):
     return({URL:apartment})
 
 
+def calculate_expected_score(apt_1,apt_2):
+    R_1=apt_1.score
+    R_2=apt_2.score
+    E_1=1/(1+10**((R_2-R_1)/400))
+    E_2=1-E_1
+    return(E_1,E_2)
+
+def update_rating(rating_0,K,current_score,E):
+    R_u=rating_0+K*(current_score-E)
+    return(R_u)
+
+def A_beats_b(A,B):
+    C_s_a= 1
+    C_s_b= 0
+    return(C_s_a,C_s_b)
+
+
+def price_criteria(A,B):
+    criteria = random.choice([1,2])
+    if criteria==1:
+        if A.Lease_value < B.Lease_value:
+            C_s_a,C_s_b=A_beats_b(A,B)
+        else:
+            C_s_b,C_s_a=A_beats_b(B,A)
+    else:
+        if A.Administration_value < B.Administration_value:
+            C_s_a,C_s_b=A_beats_b(A,B)
+        else:
+            C_s_b,C_s_a=A_beats_b(B,A)
+    return(C_s_a,C_s_b)
+
+
 Datos=pd.read_csv('H:/2020-02/How to find a new home with Scraping and game theory/Data_Final.csv') 
 dic_apartment=dict()
 for i in range(len(Datos)):
     dic_apartment.update(column_to_apartment(Datos,i))
 
-key_1=list(dic_apartment.keys())[0]
-key_2=list(dic_apartment.keys())[1]
+key_1=list(dic_apartment.keys())[2]
+key_2=list(dic_apartment.keys())[3]
 
-dic_apartment[key_1].score
-dic_apartment[key_2]
+
+A=dic_apartment[key_1]
+B=dic_apartment[key_2]
+E_1,E_2=calculate_expected_score(A,B)
+C_s_a,C_s_b=price_criteria(A,B)
+
+A.score=update_rating(A.score,32,C_s_a,E_1)
+B.score=update_rating(B.score,32,C_s_b,E_2)
+
+print(f"""
+      A
+{A.Lease_value}
+{A.Administration_value}
+{A.score}
+     B
+{B.Lease_value}
+{B.Administration_value}
+{B.score}
+""")
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
 
 
