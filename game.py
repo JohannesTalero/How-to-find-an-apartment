@@ -6,8 +6,6 @@ Created on Fri Jul 24 20:18:26 2020
 """
 
 #Basic Libraries
-import unidecode
-import Levenshtein
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +25,7 @@ def update_rating(rating_0,K,current_score,E):
     R_u=rating_0+K*(current_score-E)
     return(R_u)
 
-def a_against_b(A,B,won=0):
+def a_against_b(a,b,won=0):
     """
     Parameters
     ----------
@@ -47,81 +45,106 @@ def a_against_b(A,B,won=0):
     None.
 
     """
+    A=Datos.iloc[a,]
+    B=Datos.iloc[b,]
+
     E_1,E_2=calculate_expected_score(A,B)
     #-------expected--------
-    A.score_ex=A.score_ex + E_1
-    B.score_ex=B.score_ex + E_2
+    Datos.loc[:,'score_ex'].iloc[a,]=Datos.loc[:,'score_ex'].iloc[a,] + E_1
+    Datos.loc[:,'score_ex'].iloc[b,]=Datos.loc[:,'score_ex'].iloc[b,] + E_2
+
     if won==0:
-        A.score_ac=A.score_ac + 0.5
-        B.score_ac=B.score_ac + 0.5        
+        Datos.loc[:,'score_ac'].iloc[a,]=Datos.loc[:,'score_ac'].iloc[a,] + 0.5
+        Datos.loc[:,'score_ac'].iloc[b,]=Datos.loc[:,'score_ac'].iloc[b,] + 0.5
     elif won==1:
-        A.score_ac=A.score_ac + 1
-        B.score_ac=B.score_ac + 0        
+        Datos.loc[:,'score_ac'].iloc[a,]=Datos.loc[:,'score_ac'].iloc[a,] + 1
+        Datos.loc[:,'score_ac'].iloc[b,]=Datos.loc[:,'score_ac'].iloc[b,] + 0
     elif won==2:
-        A.score_ac=A.score_ac + 0
-        B.score_ac=B.score_ac + 1        
+        Datos.loc[:,'score_ac'].iloc[a,]=Datos.loc[:,'score_ac'].iloc[a,] + 0
+        Datos.loc[:,'score_ac'].iloc[b,]=Datos.loc[:,'score_ac'].iloc[b,] + 1
     else:
         print('Enter a suitable value for "Won"')
-    A.games=A.games+1
-    B['games']=B['games']+1
 
-def bigger_better(A,B,variable):
+    Datos.loc[:,'games'].iloc[a,]=Datos.loc[:,'games'].iloc[a,] + 1
+    Datos.loc[:,'games'].iloc[b,]=Datos.loc[:,'games'].iloc[b,] + 1
+
+def bigger_better(a,b,variable):
+    
+    A=Datos.iloc[a,]
+    B=Datos.iloc[b,]
     
     if A[variable] > B[variable]:
-        a_against_b(A,B,1)
+        a_against_b(a,b,1)
     elif A[variable] < B[variable]:
-        a_against_b(A,B,2)
+        a_against_b(a,b,2)
     else:
-        a_against_b(A,B,0)
+        a_against_b(a,b,0)
 
-def less_better(A,B,variable):
+def less_better(a,b,variable):
+
+    A=Datos.iloc[a,]
+    B=Datos.iloc[b,]
+    
     
     if A[variable] < B[variable]:
-        a_against_b(A,B,1)
+        a_against_b(a,b,1)
     elif A[variable] > B[variable]:
-        a_against_b(A,B,2)
+        a_against_b(a,b,2)
     else:
-        a_against_b(A,B,0)
+        a_against_b(a,b,0)
+
 
 
 
 
 Datos=pd.read_csv('H:/2020-02/How to find a new home with Scraping and game theory/Data_Final.csv') 
 
-less=['Valor de arriendo', 'Valor de administración','Estrato']
+less=['Valor de arriendo', 'Valor de administración','Estrato','Localidad_or']
 bigger=['Área construida','Habitaciones','Baños', 'Parqueadero','Área privada','Negociar Precio']
 
+weights=[10,10,7,12,17,10,3,15,15,1]
 
+Localidad_or=['Usaquén', 'Suba', 'Chapinero','Barrios Unidos','Teusaquillo', 
+              np.nan,'La Candelaria','Fontibón','Puente Aranda','Engativá', 'Santa Fe','Kennedy','San Cristóbal','Usme','Bosa',
+              'Ciudad Bolívar', 'Tunjuelito','Los Mártires','Rafael Uribe Uribe', 'Antonio Nariño']
+
+Datos['Localidad_or']=0
+i=0
+for l in Localidad_or:
+    i=i+1
+    Datos['Localidad_or']=np.where(Datos['Localidad']==l,i,Datos['Localidad_or'])
+
+Datos['Localidad_or']=np.where(Datos['Localidad'].isnull(),6,Datos['Localidad_or'])    
 Datos['Negociar Precio']=1*Datos['Negociar Precio']
+
 Datos['score']=1500
-Datos['score_ex']=0
-Datos['score_ac']=0
-Datos['games']=0
-Datos.iloc[2,-1]=2
-B=Datos.iloc[3,]
+Datos['score_ex']=0.0
+Datos['score_ac']=0.0
+Datos['games']=0.0
 
-for i in range(10):
 
-    var=random.choice(less+bigger)
-    print(var)
-    if var in less:
-        less_better(Datos.iloc[2,],Datos.iloc[3,],var)
-    else:
-        bigger_better(Datos.iloc[2,],Datos.iloc[3,],var)
-        
+for i in range(len(Datos)*20):
+    a=random.choice(range(len(Datos)))
+    b=random.choice(range(len(Datos)))
     
+    num=random.choice(range(100))
 
-
-
-
-
+    for j in range(len(weights)):
+        num=num-weights[j]
+        if num<= 0:
+            vari=less+bigger
+            var=vari[j]
+            break
+    # a,b index of the apartments
+    if var in less:
+        less_better(a,b,var)
+    else:
+        bigger_better(a,b,var)
+    pct=round(100*(i+1)/(len(Datos)*20+1),2)
+    print(f'--------------------- {pct}% ---------------------------' )
+    if i%len(Datos)==0:
+        Datos['score']=update_rating(Datos['score'],34,Datos['score_ac'],Datos['score_ex'])        
  
-
-
-
-
-
-
 
 
 
