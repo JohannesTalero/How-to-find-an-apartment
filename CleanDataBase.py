@@ -89,18 +89,15 @@ for var in variables_eliminate:
 # Clean Área construida
 Data_Apartments['Área construida']=clean_variable_to_float(Data_Apartments,'Área construida',[' ','m2','de0','de'],point_importance=True)
 Data_Apartments['Área construida']=np.where(Data_Apartments['Área construida']>=1000,Data_Apartments['Área construida']/100,Data_Apartments['Área construida'])
-Data_Apartments['Área construida'].describe()
 
 # Clean Area privada
 Data_Apartments['Área privada']=clean_variable_to_float(Data_Apartments,'Área privada',[' ','m2','de0','de'],point_importance=True)
 Data_Apartments['Área privada']=np.where(Data_Apartments['Área privada']>=1000,Data_Apartments['Área privada']/100,Data_Apartments['Área privada'])
 Data_Apartments['Área privada']=np.where(Data_Apartments['Área privada']>=300,Data_Apartments['Área privada']/10,Data_Apartments['Área privada'])
-Data_Apartments['Área privada'].describe()
 
 # Clean Valor de arriendo
 Data_Apartments['Negociar Precio']=(Data_Apartments['Valor de arriendo'].astype('str').apply(len_split_by_sep)>1)
 Data_Apartments['Valor de arriendo']=clean_variable_to_float(Data_Apartments,'Valor de arriendo',[' Negociar Precio'])
-Data_Apartments['Valor de arriendo'].describe()
 
 # Clean Valor de administración
 Data_Apartments['Valor de administración']=clean_variable_to_float(Data_Apartments,'Valor de administración',[''])
@@ -110,35 +107,24 @@ Data_Apartments['Valor de administración'].describe()
 Data_Apartments['Número de piso']=clean_variable_to_float(Data_Apartments,'Número de piso',[''])
 Data_Apartments['Número de piso']=np.where(Data_Apartments['Número de piso']>=100,Data_Apartments['Número de piso']/100,Data_Apartments['Número de piso'])
 Data_Apartments['Número de piso']=np.where(Data_Apartments['Número de piso']>=20,Data_Apartments['Número de piso']/10,Data_Apartments['Número de piso'])
-Data_Apartments['Número de piso'].describe()
 
 #-----------------------------------------------------------------------------
 #----------------------Delete apartments and variables------------------------
 #-----------------------------------------------------------------------------
 
 #Keep case whit basic information
-Data_Apartments=Data_Apartments[Data_Apartments['Valor de arriendo'].isnull() ==False]
-Data_Apartments=Data_Apartments[Data_Apartments['Imagen'].isnull() ==False]
-Data_Apartments=Data_Apartments[Data_Apartments['Área construida'].isnull() ==False]
-Data_Apartments=Data_Apartments[Data_Apartments['Estrato'].isnull() ==False]
-
-Data_Apartments=Data_Apartments.reset_index()
-del Data_Apartments['index']
-del Data_Apartments['Código web']
+for var in ['Valor de arriendo','Imagen','Área construida','Estrato']:
+    Data_Apartments=Data_Apartments[Data_Apartments[var].isnull() ==False]
 
 #Posible Duplicates
-Data_Apartments=drop_duplicates_by_var_threshold(Data_Apartments,'Description',0.85)
-Data_Apartments=drop_duplicates_by_var_threshold(Data_Apartments,'Imagen',0.85)
+for var in ['Description','Imagen']:
+    Data_Apartments=drop_duplicates_by_var_threshold(Data_Apartments,var,0.85)
 
-Data_Apartments=Data_Apartments.reset_index()
-del Data_Apartments['index']
+Data_Apartments.reset_index(drop=True,inplace=True)
 
 #-----------------------------------------------------------------------------
 #------------------------------Parkin information-----------------------------
 #-----------------------------------------------------------------------------
-
-del Data_Apartments['Características del Parqueadero']
-del Data_Apartments['Parqueadero cubierto']
 
 Data_Apartments['Parqueadero']=np.where(Data_Apartments['Parqueadero'].isnull(),0,Data_Apartments['Parqueadero'])
 
@@ -155,57 +141,37 @@ Data_Apartments['Tipo de parqueadero']=np.where(Data_Apartments['Tipo de parquea
 #------------------------------Del Information -------------------------------
 #-----------------------------------------------------------------------------
 
-del Data_Apartments['Tipo comedor']
-del Data_Apartments['Conjunto cerrado']
-del Data_Apartments['Tipo instalación de gas']
-del Data_Apartments['Tipo de Cocina']
-del Data_Apartments['Zona de lavanderia'] 
-del Data_Apartments['Área Terraza/Balcón']
+var_del=['Tipo comedor','Conjunto cerrado', 'Tipo instalación de gas','Tipo de Cocina', 'Zona de lavanderia',
+         'Área Terraza/Balcón','Características del Parqueadero','Parqueadero cubierto','Código web']
+Data_Apartments=Data_Apartments[[x for x in Data_Apartments.columns if x not in var_del ]]
 
-Data_Apartments['Tipo de calentador']=np.where(Data_Apartments['Tipo de calentador'].isnull(),'No reportado',Data_Apartments['Tipo de calentador'])
-Data_Apartments['Tipo de estufa']=np.where(Data_Apartments['Tipo de estufa'].isnull(),'No reportado',Data_Apartments['Tipo de estufa'])
-Data_Apartments['Terraza/Balcón']=np.where(Data_Apartments['Terraza/Balcón'].isnull(),'No reportado',Data_Apartments['Terraza/Balcón'])
+for c in ['Tipo de calentador','Tipo de estufa','Terraza/Balcón']:
+    Data_Apartments[c]=np.where(Data_Apartments[c].isnull(),'No reportado',Data_Apartments[c])
 
 #-----------------------------------------------------------------------------
 #------------------------------ Data enrichment-------------------------------
 #-----------------------------------------------------------------------------
 Barrios=pd.read_csv(path+'Data_Localidades.csv',sep=',')
 del Barrios['Unnamed: 0']
-Barrios['Barrio']=Barrios['Barrio'].str.strip()
-Barrios['Barrio']=Barrios['Barrio'].str.upper()
-Barrios['Barrio']=Barrios['Barrio'].apply(unidecode.unidecode)
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='LOS ')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='EL ')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='LAS ')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' DEL ')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' DE ')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string='LA ')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' I')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' II')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' III')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' IV')
-Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=' V')
-Barrios['Barrio']=Barrios['Barrio'].apply(delet_non_alphanumeric)
-Barrios.drop_duplicates()
 
 Data_Apartments['Barrio']=Data_Apartments['Nombre del barrio catastral']
+
+Barrios['Barrio']=Barrios['Barrio'].str.strip()
+Barrios['Barrio']=Barrios['Barrio'].str.upper()
 Data_Apartments['Barrio']=Data_Apartments['Barrio'].str.upper()
+Barrios['Barrio']=Barrios['Barrio'].apply(unidecode.unidecode)
 Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(unidecode.unidecode)
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='LOS ')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='EL ')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='LAS ')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' DEL ')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' DE ')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string='LA ')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' I')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' II')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' III')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' IV')
-Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=' V')
+
+for v in ['LOS ','EL ','LAS ',' DEL ',' DE ','LA ',' I',' II',' III',' IV',' V']:
+    Barrios['Barrio']=Barrios['Barrio'].apply(del_string,string=v)
+    Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(del_string,string=v)
+
+Barrios['Barrio']=Barrios['Barrio'].apply(delet_non_alphanumeric)
 Data_Apartments['Barrio']=Data_Apartments['Barrio'].apply(delet_non_alphanumeric)
+Barrios.drop_duplicates()
+
 
 Data_Apartments_En=pd.merge(Data_Apartments,Barrios,how='left',on='Barrio')
-
 #------------------------------------------------------------------------------
 for a in Data_Apartments_En[Data_Apartments_En.Localidad.isnull()]['Barrio'].unique():
     Barrios_lista=Barrios.Barrio.unique()

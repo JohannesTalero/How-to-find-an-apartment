@@ -215,9 +215,9 @@ smart_delay(driver,10,'//div[@class="button"]')
 rooms_3=driver.find_elements_by_xpath('//div[@class="button"]')[2]
 ActionChains(driver).click(rooms_3).perform()
 #Select options with 2 rooms
-#time.sleep(10)
-#rooms_2=driver.find_elements_by_xpath('//div[@class="button"]')[1]
-#ActionChains(driver).click(rooms_2).perform()
+time.sleep(15)
+rooms_2=driver.find_elements_by_xpath('//div[@class="button"]')[1]
+ActionChains(driver).click(rooms_2).perform()
 
 Price_l=driver.find_element_by_xpath('//input[@id="list-price_from"]')
 Price_u=driver.find_element_by_xpath('//input[@id="list-price_to"]')
@@ -258,7 +258,7 @@ Full_links_DF.to_csv("H:/2020-02/How to find a new home with Scraping and game t
   
 #----------------------------------------------------------------------------
 #--------------------------------Read each apartment -----------------------------
-#----------------------------------------------------------------------------
+#----------------------------------------------------------------------------s
 #Driver initilizer
 options=webdriver.ChromeOptions()
 options.add_argument('--incognito')
